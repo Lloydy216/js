@@ -1,6 +1,5 @@
 # README
 
-Retro Arcade Breakout
 Retro Arcade Breakout is a classic-style browser game inspired by the original Breakout. Built using HTML, CSS, and JavaScript, this is my second project on the course, aimed at strengthening my understanding of DOM manipulation, JavaScript logic, and interactive gameplay. The objective is simple: use a paddle to keep the ball in play, break all the bricks, and avoid losing all your lives.
 
 Responsive paddle control using mouse movement (left to right)
