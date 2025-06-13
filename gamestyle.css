@@ -1,32 +1,78 @@
 /* style.css */
+/* gamestyle.css */
+
+/* Load retro font */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+
+:root {
+  --arcade-bg: #000;
+  --arcade-text: #00ffcc;
+  --arcade-border: #ff00ff;
+  --arcade-paddle: #00ccff;
+  --arcade-ball: #ffff00;
+  --arcade-glow: 0 0 5px #00ffcc, 0 0 10px #00ffcc, 0 0 20px #00ffcc;
+}
+
+/* Reset & layout */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f7f7f7;
-    margin: 0;
-    padding: 0;
-    color: #222;
+  background-color: var(--arcade-bg);
+  color: var(--arcade-text);
+  font-family: 'Press Start 2P', monospace;
+  text-align: center;
+  padding-top: 20px;
+  user-select: none;
 }
 
-h1, h2, h3 {
-    color: #333;
-    margin-top: 1.5em;
+/* Heading */
+h1 {
+  font-size: 16px;
+  color: var(--arcade-text);
+  text-shadow: var(--arcade-glow);
+  margin-bottom: 10px;
 }
 
-a {
-    color: #007acc;
-    text-decoration: none;
+/* Score & Lives */
+div {
+  margin-bottom: 15px;
 }
 
-a:hover {
-    text-decoration: underline;
+#score, #lives {
+  margin: 0 10px;
+  font-size: 10px;
+  color: #ffffff;
+  text-shadow: 0 0 5px #ff00ff;
 }
 
-.container {
-    max-width: 800px;
-    margin: 2em auto;
-    background: #fff;
-    padding: 2em;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+/* Canvas styling */
+canvas {
+  background-color: #111;
+  border: 4px solid var(--arcade-border);
+  box-shadow: 0 0 15px var(--arcade-border);
+  display: block;
+  margin: 0 auto;
+}
+
+/* Optional button styles (if you add restart buttons later) */
+button {
+  background: transparent;
+  color: var(--arcade-text);
+  border: 2px solid var(--arcade-border);
+  padding: 10px;
+  margin-top: 20px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background-color: var(--arcade-border);
+  color: #000;
 }

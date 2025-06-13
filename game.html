@@ -2,12 +2,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-// Required meta tags
-    <meta charset="UTF-8">
+ <meta charset="UTF-8">
     <!-- Title -->
     <title>Breakout Game</title>
     <!-- Link to external CSS for styling --> 
-     <link rel="stylesheet" href="gamestyle.css">
+    <link rel="stylesheet" href="gamestyle.css">
     <!--Viewport settings for responsive design -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
@@ -15,9 +14,11 @@
     </style>
 </head>
 <body>
-    <!-- Main title and score display -->
+    <!-- Background music -->
+    <audio id="bgMusic" src="boss.ogg" loop></audio>
     <h1>Project 2 - Breakout Game</h1>
     <div>
+        <button id="muteBtn">Mute Music</button>
         <span id="score">Score: 0</span>
         <span id="lives">Lives: 3</span>
     </div>
@@ -26,6 +27,27 @@
 </body>
 </html>
 <script>
+// Start background music
+const music = document.getElementById("bgMusic");
+
+// Start music after user interaction
+document.body.addEventListener("click", () => {
+    if (music.paused) {
+        music.volume = 0.2; // adjust volume
+        music.play();
+    }
+}, { once: true });
+// Mute/Unmute button functionality
+   document.getElementById("muteBtn").onclick = function() {
+            const music = document.getElementById("bgMusic");
+            if (music.muted) {
+                music.muted = false;
+                this.textContent = "Mute Music";
+            } else {
+                music.muted = true;
+                this.textContent = "Unmute Music";
+            }
+        };
 
 // Game variables
 let canvas = document.getElementById("myCanvas");
@@ -102,16 +124,22 @@ function collisionDetection() {
 function drawBall() {
     ctx.beginPath();
     ctx.arc(x, y, ballRadius, 0, Math.PI*2);
-    ctx.fillStyle = "#0095DD";
+    ctx.fillStyle = "#ffff00"; // neon yellow
     ctx.fill();
     ctx.closePath();
 }
+
 function drawPaddle() {
     ctx.beginPath();
-    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
-    ctx.fillStyle = "#0095DD";
+    ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
+    ctx.fillStyle = "#00ccff"; // neon blue
     ctx.fill();
     ctx.closePath();
+}
+function drawScore() {
+    ctx.font = "16px Arial";
+    ctx.fillStyle = "#0095DD";
+    ctx.fillText("Score: " + score, 8, 20);
 }
 function drawBricks() {
     for(let c=0; c<brickColumnCount; c++) {
@@ -123,7 +151,9 @@ function drawBricks() {
                 bricks[c][r].y = brickY;
                 ctx.beginPath();
                 ctx.rect(brickX, brickY, brickWidth, brickHeight);
-                ctx.fillStyle = "#"+((1<<24)*Math.random()|0).toString(16); // random color
+                const brickColors = ["#ff0040", "#00ccff", "#ffff00", "#ff00ff", "#00ffcc"];
+ctx.fillStyle = brickColors[(r + c) % brickColors.length];
+
                 ctx.fill();
                 ctx.closePath();
             }
