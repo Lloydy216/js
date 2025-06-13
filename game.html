@@ -27,6 +27,8 @@
 </body>
 </html>
 <script>
+    let paused = false;
+
 // Start background music
 const music = document.getElementById("bgMusic");
 
@@ -82,6 +84,17 @@ for(let c=0; c<brickColumnCount; c++) {
 }
 
 // Event listeners
+
+// Pause the game when 'P' is pressed
+document.addEventListener("keydown", function (e) {
+    if (e.key === "p" || e.key === "P") {
+        paused = !paused;
+        if (!paused) {
+            draw(); // Resume drawing when unpaused
+        }
+    }
+});
+
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
 document.addEventListener("mousemove", mouseMoveHandler, false);
@@ -190,6 +203,7 @@ function draw() {
 
     if(rightPressed && paddleX < canvas.width-paddleWidth) paddleX += 7;
     else if(leftPressed && paddleX > 0) paddleX -= 7;
+if (paused) return;
 
     x += dx;
     y += dy;
