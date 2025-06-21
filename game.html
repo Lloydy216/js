@@ -18,12 +18,20 @@
     <audio id="bgMusic" src="boss.ogg" loop></audio>
     
     <h1>Project 2 - Breakout Game</h1>
-    <div>
+    <div class="controls">
         <button id="muteBtn">Mute Music</button>
         <span id="score">Score: 0</span>
         <span id="lives">Lives: 3</span>
     </div>
+   
 <canvas id="myCanvas" width="480" height="320" role="img" aria-label="Breakout game canvas"></canvas>
+
+<div id="leaderboard" class="hidden">
+  <h2>🏆 Leaderboard</h2>
+  <ol id="leaderboardList"></ol>
+</div>
+<input type="text" id="playerName" placeholder="Enter name" maxlength="12">
+<button id="saveScoreBtn">💾 Save Score</button>
 
    <script src=".js"></script>
    

@@ -167,3 +167,36 @@ function draw() {
 }
 
 draw();
+const saveScoreBtn = document.getElementById("saveScoreBtn");
+const playerNameInput = document.getElementById("playerName");
+const leaderboardList = document.getElementById("leaderboard");
+
+const MAX_LEADERBOARD = 5;
+
+function getLeaderboard() {
+  return JSON.parse(localStorage.getItem("breakoutLeaderboard")) || [];
+}
+
+function saveToLeaderboard(name, score) {
+  const leaderboard = getLeaderboard();
+  leaderboard.push({ name, score });
+  leaderboard.sort((a, b) => b.score - a.score);
+  leaderboard.splice(MAX_LEADERBOARD);
+  localStorage.setItem("breakoutLeaderboard", JSON.stringify(leaderboard));
+  showLeaderboard();
+}
+
+function showLeaderboard() {
+  const scores = getLeaderboard();
+  leaderboardList.innerHTML = scores
+    .map(entry => `<li>${entry.name} - ${entry.score}</li>`)
+    .join("");
+  document.getElementById("leaderboard").classList.remove("hidden");
+}
+
+saveScoreBtn.addEventListener("click", () => {
+  const name = playerNameInput.value.trim() || "Anon";
+  saveToLeaderboard(name, score);
+  saveScoreBtn.disabled = true;
+  playerNameInput.disabled = true;
+});
