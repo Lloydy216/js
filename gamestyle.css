@@ -4,7 +4,21 @@
 /* Load retro font */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+/* Responsive design for the game canvas and HUD */
+@media (max-width: 600px) {
+  canvas {
+    width: 100%;
+    height: auto;
+  }
 
+  .hud {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+
+/* Color scheme */
 :root {
   --arcade-bg: #000;
   --arcade-text: #00ffcc;

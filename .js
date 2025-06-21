@@ -1,25 +1,18 @@
 let paused = false;
 
-const music = document.getElementById("bgMusic");
+const bgMusic = document.getElementById("bgMusic");
+const muteBtn = document.getElementById("muteBtn");
 
-// Start music after user interaction
-document.body.addEventListener("click", () => {
-  if (music.paused) {
-    music.volume = 0.2;
-    music.play();
-  }
-}, { once: true });
-
-// Mute toggle
-document.getElementById("muteBtn").onclick = function () {
-  if (music.muted) {
-    music.muted = false;
-    this.textContent = "Mute Music";
+muteBtn.addEventListener("click", () => {
+  if (bgMusic.paused) {
+    bgMusic.play();
+    muteBtn.textContent = "🔇 Mute Music";
   } else {
-    music.muted = true;
-    this.textContent = "Unmute Music";
+    bgMusic.pause();
+    muteBtn.textContent = "🔊 Unmute Music";
   }
-};
+});
+
 
 // Game setup
 const canvas = document.getElementById("myCanvas");
