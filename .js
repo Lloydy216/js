@@ -1,3 +1,422 @@
+// ===== MOBILE DETECTION & SETUP =====
+let isMobile = false;
+let touchSensitivity = 1.0; // Default sensitivity multiplier
+
+// Detect mobile device
+function detectMobile() {
+  isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+             window.innerWidth <= 600;
+  
+  if (isMobile) {
+    document.body.classList.add('is-mobile');
+    document.body.classList.remove('is-desktop');
+    showMobileControls();
+  } else {
+    document.body.classList.add('is-desktop');
+    document.body.classList.remove('is-mobile');
+    hideMobileControls();
+  }
+  
+  updateControlInstructions();
+}
+
+// Show/hide mobile controls
+function showMobileControls() {
+  document.querySelector('.mobile-controls').classList.remove('hidden');
+  document.querySelector('.desktop-controls').classList.add('hidden');
+  document.getElementById('mobileControls').classList.remove('hidden');
+}
+
+function hideMobileControls() {
+  document.querySelector('.mobile-controls').classList.add('hidden');
+  document.querySelector('.desktop-controls').classList.remove('hidden');
+  document.getElementById('mobileControls').classList.add('hidden');
+}
+
+// Update control instructions based on device
+function updateControlInstructions() {
+  const mobileControls = document.querySelector('.mobile-controls');
+  const desktopControls = document.querySelector('.desktop-controls');
+  
+  if (isMobile) {
+    mobileControls.classList.remove('hidden');
+    desktopControls.classList.add('hidden');
+  } else {
+    mobileControls.classList.add('hidden');
+    desktopControls.classList.remove('hidden');
+  }
+}
+
+// ===== TOUCH CONTROLS =====
+let touchStartX = 0;
+let touchStartY = 0;
+let isTouching = false;
+
+// Touch event handlers
+function handleTouchStart(e) {
+  if (gameState !== 'playing') return;
+  
+  e.preventDefault();
+  const touch = e.touches[0];
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+  isTouching = true;
+}
+
+function handleTouchMove(e) {
+  if (gameState !== 'playing' || !isTouching) return;
+  
+  e.preventDefault();
+  const touch = e.touches[0];
+  const deltaX = (touch.clientX - touchStartX) * touchSensitivity;
+  
+  // Move paddle based on touch movement
+  const canvasRect = canvas.getBoundingClientRect();
+  const relativeX = touch.clientX - canvasRect.left;
+  
+  if (relativeX > 0 && relativeX < canvas.width) {
+    paddleX = relativeX - paddleWidth / 2;
+  }
+  
+  // Keep paddle within bounds
+  if (paddleX < 0) paddleX = 0;
+  if (paddleX + paddleWidth > canvas.width) paddleX = canvas.width - paddleWidth;
+}
+
+function handleTouchEnd(e) {
+  if (gameState !== 'playing') return;
+  
+  e.preventDefault();
+  isTouching = false;
+}
+
+// Add touch event listeners
+function setupTouchControls() {
+  canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+  canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+  canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
+  
+  // Prevent default touch behaviors
+  canvas.addEventListener('touchcancel', (e) => e.preventDefault(), { passive: false });
+}
+
+// ===== AUDIO HANDLING =====
+let audioInitialized = false;
+
+// Initialize audio after user interaction
+function initializeAudio() {
+  if (audioInitialized) return;
+  
+  const bgMusic = document.getElementById("bgMusic");
+  
+  // Set audio properties
+  bgMusic.volume = gameSettings.musicVolume / 100;
+  bgMusic.loop = true;
+  
+  // Try to play audio
+  const playPromise = bgMusic.play();
+  
+  if (playPromise !== undefined) {
+    playPromise
+      .then(() => {
+        console.log('Audio started successfully');
+        audioInitialized = true;
+        updateMuteButton();
+      })
+      .catch(error => {
+        console.log('Audio autoplay blocked:', error);
+        // Audio will be enabled on first user interaction
+      });
+  }
+}
+
+// Update mute button text
+function updateMuteButton() {
+  const muteBtn = document.getElementById("muteBtn");
+  const bgMusic = document.getElementById("bgMusic");
+  
+  if (bgMusic.paused) {
+    muteBtn.textContent = "🔊 Unmute Music";
+  } else {
+    muteBtn.textContent = "🔇 Mute Music";
+  }
+}
+
+// ===== GAME STATE MANAGEMENT =====
+let gameState = 'start'; // 'start', 'playing', 'paused', 'gameOver'
+let gameRunning = false;
+
+// ===== GAME SETTINGS =====
+let gameSettings = {
+  musicVolume: 50,
+  ballSpeed: 'normal',
+  paddleSize: 'normal',
+  touchSensitivity: 'normal'
+};
+
+// Load settings from localStorage
+function loadSettings() {
+  const saved = localStorage.getItem('breakoutSettings');
+  if (saved) {
+    gameSettings = { ...gameSettings, ...JSON.parse(saved) };
+  }
+  applySettings();
+}
+
+// Save settings to localStorage
+function saveSettings() {
+  localStorage.setItem('breakoutSettings', JSON.stringify(gameSettings));
+}
+
+// Apply settings to game
+function applySettings() {
+  // Apply music volume
+  const bgMusic = document.getElementById("bgMusic");
+  bgMusic.volume = gameSettings.musicVolume / 100;
+  document.getElementById('musicVolume').value = gameSettings.musicVolume;
+  document.getElementById('volumeValue').textContent = gameSettings.musicVolume + '%';
+  
+  // Apply ball speed
+  const ballSpeedSelect = document.getElementById('ballSpeed');
+  ballSpeedSelect.value = gameSettings.ballSpeed;
+  
+  // Apply paddle size
+  const paddleSizeSelect = document.getElementById('paddleSize');
+  paddleSizeSelect.value = gameSettings.paddleSize;
+  
+  // Apply touch sensitivity
+  const touchSensitivitySelect = document.getElementById('touchSensitivity');
+  touchSensitivitySelect.value = gameSettings.touchSensitivity;
+  
+  // Update touch sensitivity
+  updateTouchSensitivity();
+  
+  // Update paddle width based on setting
+  updatePaddleSize();
+}
+
+// Update touch sensitivity based on settings
+function updateTouchSensitivity() {
+  switch(gameSettings.touchSensitivity) {
+    case 'low':
+      touchSensitivity = 0.5;
+      break;
+    case 'normal':
+      touchSensitivity = 1.0;
+      break;
+    case 'high':
+      touchSensitivity = 1.5;
+      break;
+  }
+}
+
+// Update paddle size based on settings
+function updatePaddleSize() {
+  switch(gameSettings.paddleSize) {
+    case 'small':
+      paddleWidth = 50;
+      break;
+    case 'normal':
+      paddleWidth = 75;
+      break;
+    case 'large':
+      paddleWidth = 100;
+      break;
+  }
+  // Keep paddle within bounds
+  if (paddleX + paddleWidth > canvas.width) {
+    paddleX = canvas.width - paddleWidth;
+  }
+}
+
+// ===== SCREEN MANAGEMENT =====
+function showScreen(screenId) {
+  // Hide all screens
+  document.querySelectorAll('.game-screen').forEach(screen => {
+    screen.classList.add('hidden');
+  });
+  
+  // Show requested screen
+  document.getElementById(screenId).classList.remove('hidden');
+  
+  // Update game state
+  switch(screenId) {
+    case 'startScreen':
+      gameState = 'start';
+      gameRunning = false;
+      break;
+    case 'gameScreen':
+      gameState = 'playing';
+      gameRunning = true;
+      break;
+    case 'pauseMenu':
+      gameState = 'paused';
+      gameRunning = false;
+      break;
+    case 'gameOverScreen':
+      gameState = 'gameOver';
+      gameRunning = false;
+      break;
+    case 'settingsScreen':
+      gameState = 'settings';
+      gameRunning = false;
+      break;
+  }
+}
+
+// ===== GAME INITIALIZATION =====
+function initGame() {
+  // Initialize audio on first game start
+  initializeAudio();
+  
+  // Reset game variables
+  score = 0;
+  lives = 3;
+  x = canvas.width / 2;
+  y = canvas.height - 30;
+  
+  // Set ball speed based on settings
+  const baseSpeed = 2;
+  switch(gameSettings.ballSpeed) {
+    case 'slow':
+      dx = baseSpeed * 0.7;
+      dy = -baseSpeed * 0.7;
+      break;
+    case 'normal':
+      dx = baseSpeed;
+      dy = -baseSpeed;
+      break;
+    case 'fast':
+      dx = baseSpeed * 1.5;
+      dy = -baseSpeed * 1.5;
+      break;
+  }
+  
+  // Reset paddle
+  paddleX = (canvas.width - paddleWidth) / 2;
+  
+  // Reset bricks
+  for (let c = 0; c < brickColumnCount; c++) {
+    for (let r = 0; r < brickRowCount; r++) {
+      bricks[c][r].status = 1;
+    }
+  }
+  
+  // Update UI
+  document.getElementById("score").textContent = "Score: " + score;
+  document.getElementById("lives").textContent = "Lives: " + lives;
+  
+  // Start game loop
+  gameRunning = true;
+  draw();
+}
+
+// ===== GAME PAUSE/RESUME =====
+function pauseGame() {
+  if (gameState === 'playing') {
+    showScreen('pauseMenu');
+  }
+}
+
+function resumeGame() {
+  if (gameState === 'paused') {
+    showScreen('gameScreen');
+    gameRunning = true;
+    draw();
+  }
+}
+
+// ===== GAME OVER HANDLING =====
+function gameOver(isWin = false) {
+  gameRunning = false;
+  
+  const gameOverTitle = document.getElementById('gameOverTitle');
+  const finalScoreElement = document.getElementById('finalScore');
+  
+  if (isWin) {
+    gameOverTitle.textContent = '🎉 YOU WIN! 🎉';
+    gameOverTitle.style.color = '#00ff00';
+  } else {
+    gameOverTitle.textContent = '🎯 Game Over!';
+    gameOverTitle.style.color = '#ff0040';
+  }
+  
+  finalScoreElement.textContent = `Final Score: ${score}`;
+  showScreen('gameOverScreen');
+}
+
+// ===== EVENT LISTENERS =====
+
+// Start screen buttons
+document.getElementById('startGameBtn').addEventListener('click', () => {
+  initializeAudio(); // Initialize audio on first click
+  showScreen('gameScreen');
+  initGame();
+});
+
+document.getElementById('settingsBtn').addEventListener('click', () => {
+  initializeAudio(); // Initialize audio on first click
+  showScreen('settingsScreen');
+});
+
+document.getElementById('leaderboardBtn').addEventListener('click', async () => {
+  initializeAudio(); // Initialize audio on first click
+  showScreen('gameScreen');
+  await showLeaderboard();
+});
+
+// Pause menu buttons
+document.getElementById('resumeBtn').addEventListener('click', resumeGame);
+document.getElementById('restartBtn').addEventListener('click', () => {
+  showScreen('gameScreen');
+  initGame();
+});
+document.getElementById('mainMenuBtn').addEventListener('click', () => {
+  showScreen('startScreen');
+});
+
+// Game over screen buttons
+document.getElementById('playAgainBtn').addEventListener('click', () => {
+  showScreen('gameScreen');
+  initGame();
+});
+document.getElementById('saveScoreMenuBtn').addEventListener('click', async () => {
+  const name = prompt('Enter your name:') || 'Anonymous';
+  await saveToLeaderboard(name, score);
+});
+document.getElementById('mainMenuFromGameOverBtn').addEventListener('click', () => {
+  showScreen('startScreen');
+});
+
+// Settings screen buttons
+document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+  // Update settings from form
+  gameSettings.musicVolume = parseInt(document.getElementById('musicVolume').value);
+  gameSettings.ballSpeed = document.getElementById('ballSpeed').value;
+  gameSettings.paddleSize = document.getElementById('paddleSize').value;
+  gameSettings.touchSensitivity = document.getElementById('touchSensitivity').value;
+  
+  saveSettings();
+  applySettings();
+  alert('Settings saved!');
+});
+document.getElementById('backToMenuBtn').addEventListener('click', () => {
+  showScreen('startScreen');
+});
+
+// Settings form controls
+document.getElementById('musicVolume').addEventListener('input', (e) => {
+  const volume = e.target.value;
+  document.getElementById('volumeValue').textContent = volume + '%';
+  const bgMusic = document.getElementById("bgMusic");
+  bgMusic.volume = volume / 100;
+});
+
+// Pause button in game
+document.getElementById('pauseBtn').addEventListener('click', pauseGame);
+
+// ===== ORIGINAL GAME CODE =====
+
 // Game pause state
 let paused = false;
 
@@ -7,12 +426,17 @@ const muteBtn = document.getElementById("muteBtn");
 
 // Toggle music mute/unmute functionality
 muteBtn.addEventListener("click", () => {
+  initializeAudio(); // Initialize audio on first click
+  
   if (bgMusic.paused) {
-    bgMusic.play();
-    muteBtn.textContent = "🔇 Mute Music";
+    bgMusic.play().then(() => {
+      updateMuteButton();
+    }).catch(error => {
+      console.log('Failed to play audio:', error);
+    });
   } else {
     bgMusic.pause();
-    muteBtn.textContent = "🔊 Unmute Music";
+    updateMuteButton();
   }
 });
 
@@ -29,7 +453,7 @@ let dy = -2; // Ball vertical speed
 
 // Paddle properties
 const paddleHeight = 10;
-const paddleWidth = 75;
+let paddleWidth = 75;
 let paddleX = (canvas.width - paddleWidth) / 2;
 
 // Paddle movement flags
@@ -62,8 +486,11 @@ for (let c = 0; c < brickColumnCount; c++) {
 // Pause game with 'P' key
 document.addEventListener("keydown", function (e) {
   if (e.key === "p" || e.key === "P") {
-    paused = !paused;
-    if (!paused) draw();
+    if (gameState === 'playing') {
+      pauseGame();
+    } else if (gameState === 'paused') {
+      resumeGame();
+    }
   }
 });
 
@@ -86,6 +513,8 @@ function keyUpHandler(e) {
 
 // Handle mouse movement for paddle control
 function mouseMoveHandler(e) {
+  if (gameState !== 'playing') return;
+  
   const relativeX = e.clientX - canvas.getBoundingClientRect().left;
   if (relativeX > 0 && relativeX < canvas.width) {
     paddleX = relativeX - paddleWidth / 2;
@@ -107,8 +536,8 @@ function collisionDetection() {
           
           // Check for win condition
           if (score === brickRowCount * brickColumnCount) {
-            alert("YOU WIN, CONGRATS!");
-            document.location.reload();
+            gameOver(true);
+            return;
           }
         }
       }
@@ -159,6 +588,8 @@ function drawBricks() {
 
 // Main game loop - draw everything and update game state
 function draw() {
+  if (!gameRunning || gameState !== 'playing') return;
+  
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBricks();
   drawBall();
@@ -177,14 +608,12 @@ function draw() {
       lives--;
       document.getElementById("lives").textContent = "Lives: " + lives;
       if (!lives) {
-        alert("GAME OVER");
-        document.location.reload();
+        gameOver(false);
+        return;
       } else {
         // Reset ball position for next life
         x = canvas.width / 2;
         y = canvas.height - 30;
-        dx = 2;
-        dy = -2;
         paddleX = (canvas.width - paddleWidth) / 2;
       }
     }
@@ -194,17 +623,11 @@ function draw() {
   if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 7;
   else if (leftPressed && paddleX > 0) paddleX -= 7;
 
-  // Pause game if needed
-  if (paused) return;
-
   // Update ball position
   x += dx;
   y += dy;
   requestAnimationFrame(draw);
 }
-
-// Start the game
-draw();
 
 // ===== LEADERBOARD SYSTEM WITH SUPABASE =====
 const saveScoreBtn = document.getElementById("saveScoreBtn");
@@ -283,11 +706,6 @@ async function showLeaderboard() {
   }
 }
 
-// Load leaderboard on page load
-document.addEventListener('DOMContentLoaded', async () => {
-  await showLeaderboard();
-});
-
 // Handle save score button click
 saveScoreBtn.addEventListener("click", async () => {
   const name = playerNameInput.value.trim() || "Anon";
@@ -302,4 +720,18 @@ saveScoreBtn.addEventListener("click", async () => {
   await saveToLeaderboard(name, score);
   
   saveScoreBtn.textContent = "✅ Score Saved!";
+});
+
+// ===== INITIALIZATION =====
+// Load settings and show start screen when page loads
+document.addEventListener('DOMContentLoaded', () => {
+  detectMobile();
+  setupTouchControls();
+  loadSettings();
+  showScreen('startScreen');
+  
+  // Initialize audio on any user interaction
+  document.addEventListener('click', initializeAudio, { once: true });
+  document.addEventListener('touchstart', initializeAudio, { once: true });
+  document.addEventListener('keydown', initializeAudio, { once: true });
 });
