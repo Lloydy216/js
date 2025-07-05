@@ -1,3 +1,262 @@
+// ===== PARTICLE SYSTEM =====
+class Particle {
+  constructor(x, y, vx, vy, color, life, size) {
+    this.x = x;
+    this.y = y;
+    this.vx = vx;
+    this.vy = vy;
+    this.color = color;
+    this.life = life;
+    this.maxLife = life;
+    this.size = size;
+    this.alpha = 1;
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += 0.1; // Gravity
+    this.life--;
+    this.alpha = this.life / this.maxLife;
+    this.size *= 0.98; // Shrink over time
+  }
+
+  draw(ctx) {
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  isDead() {
+    return this.life <= 0;
+  }
+}
+
+class ParticleSystem {
+  constructor() {
+    this.particles = [];
+    this.particleCanvas = document.getElementById('particleCanvas');
+    this.particleCtx = this.particleCanvas.getContext('2d');
+    this.particleLevel = 'normal';
+  }
+
+  setParticleLevel(level) {
+    this.particleLevel = level;
+  }
+
+  createExplosion(x, y, color, count = 10) {
+    const baseCount = this.particleLevel === 'low' ? 5 : this.particleLevel === 'high' ? 20 : 10;
+    const particleCount = Math.floor(baseCount * (count / 10));
+    
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (Math.PI * 2 * i) / particleCount;
+      const speed = 2 + Math.random() * 3;
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed;
+      const life = 30 + Math.random() * 30;
+      const size = 2 + Math.random() * 3;
+      
+      this.particles.push(new Particle(x, y, vx, vy, color, life, size));
+    }
+  }
+
+  createTrail(x, y, color) {
+    if (this.particleLevel === 'low') return;
+    
+    const life = 10 + Math.random() * 10;
+    const size = 1 + Math.random() * 2;
+    const vx = (Math.random() - 0.5) * 2;
+    const vy = (Math.random() - 0.5) * 2;
+    
+    this.particles.push(new Particle(x, y, vx, vy, color, life, size));
+  }
+
+  update() {
+    this.particles = this.particles.filter(particle => {
+      particle.update();
+      return !particle.isDead();
+    });
+  }
+
+  draw() {
+    this.particleCtx.clearRect(0, 0, this.particleCanvas.width, this.particleCanvas.height);
+    
+    this.particles.forEach(particle => {
+      particle.draw(this.particleCtx);
+    });
+  }
+}
+
+// ===== POWER-UP SYSTEM =====
+class PowerUp {
+  constructor(type, x, y) {
+    this.type = type;
+    this.x = x;
+    this.y = y;
+    this.width = 20;
+    this.height = 20;
+    this.speed = 1;
+    this.active = false;
+    this.duration = 0;
+    this.maxDuration = 0;
+    
+    this.setupPowerUp();
+  }
+
+  setupPowerUp() {
+    switch(this.type) {
+      case 'life':
+        this.duration = 0; // Permanent
+        this.maxDuration = 0;
+        break;
+      case 'extend':
+        this.duration = 10000; // 10 seconds
+        this.maxDuration = 10000;
+        break;
+      case 'shrink':
+        this.duration = 8000; // 8 seconds
+        this.maxDuration = 8000;
+        break;
+      case 'multiball':
+        this.duration = 15000; // 15 seconds
+        this.maxDuration = 15000;
+        break;
+      case 'speed':
+        this.duration = 12000; // 12 seconds
+        this.maxDuration = 12000;
+        break;
+    }
+  }
+
+  update() {
+    this.y += this.speed;
+    
+    if (this.active && this.duration > 0) {
+      this.duration -= 16; // Assuming 60fps
+      if (this.duration <= 0) {
+        this.deactivate();
+      }
+    }
+  }
+
+  draw(ctx) {
+    if (this.active) return; // Don't draw if active power-up
+    
+    ctx.save();
+    ctx.fillStyle = this.getColor();
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+    
+    // Draw power-up icon
+    ctx.fillStyle = '#fff';
+    ctx.font = '12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(this.getIcon(), this.x + this.width/2, this.y + this.height/2 + 4);
+    ctx.restore();
+  }
+
+  getColor() {
+    switch(this.type) {
+      case 'life': return '#ff0040';
+      case 'extend': return '#00ff00';
+      case 'shrink': return '#ff8800';
+      case 'multiball': return '#ffff00';
+      case 'speed': return '#00ffff';
+      default: return '#ffffff';
+    }
+  }
+
+  getIcon() {
+    switch(this.type) {
+      case 'life': return '❤️';
+      case 'extend': return '⬆️';
+      case 'shrink': return '⬇️';
+      case 'multiball': return '⚽';
+      case 'speed': return '⚡';
+      default: return '?';
+    }
+  }
+
+  activate() {
+    this.active = true;
+    this.applyEffect();
+    this.updateDisplay();
+  }
+
+  deactivate() {
+    this.active = false;
+    this.removeEffect();
+    this.updateDisplay();
+  }
+
+  applyEffect() {
+    switch(this.type) {
+      case 'life':
+        lives++;
+        document.getElementById("lives").textContent = "Lives: " + lives;
+        break;
+      case 'extend':
+        paddleWidth = Math.min(paddleWidth * 1.5, 150);
+        break;
+      case 'shrink':
+        paddleWidth = Math.max(paddleWidth * 0.7, 30);
+        break;
+      case 'multiball':
+        createMultiBall();
+        break;
+      case 'speed':
+        dx *= 1.5;
+        dy *= 1.5;
+        break;
+    }
+  }
+
+  removeEffect() {
+    switch(this.type) {
+      case 'extend':
+        paddleWidth = 75; // Reset to normal
+        break;
+      case 'shrink':
+        paddleWidth = 75; // Reset to normal
+        break;
+      case 'speed':
+        dx = dx / 1.5;
+        dy = dy / 1.5;
+        break;
+    }
+  }
+
+  updateDisplay() {
+    const slot = document.getElementById('powerUpSlot1');
+    if (this.active) {
+      slot.textContent = this.getIcon();
+      slot.classList.add('active');
+      if (this.duration > 0) {
+        slot.classList.add('timer');
+        const progress = (this.duration / this.maxDuration) * 100;
+        slot.style.setProperty('--timer-width', progress + '%');
+      }
+    } else {
+      slot.textContent = '';
+      slot.classList.remove('active', 'timer');
+    }
+  }
+
+  isColliding(ballX, ballY, ballRadius) {
+    return ballX > this.x && ballX < this.x + this.width &&
+           ballY > this.y && ballY < this.y + this.height;
+  }
+}
+
+// ===== GAME VARIABLES =====
+let particleSystem;
+let powerUps = [];
+let balls = [];
+let activePowerUps = [];
+
 // ===== MOBILE DETECTION & SETUP =====
 let isMobile = false;
 let touchSensitivity = 1.0; // Default sensitivity multiplier
@@ -151,7 +410,8 @@ let gameSettings = {
   musicVolume: 50,
   ballSpeed: 'normal',
   paddleSize: 'normal',
-  touchSensitivity: 'normal'
+  touchSensitivity: 'normal',
+  particleEffects: 'normal'
 };
 
 // Load settings from localStorage
@@ -188,11 +448,16 @@ function applySettings() {
   const touchSensitivitySelect = document.getElementById('touchSensitivity');
   touchSensitivitySelect.value = gameSettings.touchSensitivity;
   
-  // Update touch sensitivity
-  updateTouchSensitivity();
+  // Apply particle effects
+  const particleEffectsSelect = document.getElementById('particleEffects');
+  particleEffectsSelect.value = gameSettings.particleEffects;
   
-  // Update paddle width based on setting
+  // Update systems
+  updateTouchSensitivity();
   updatePaddleSize();
+  if (particleSystem) {
+    particleSystem.setParticleLevel(gameSettings.particleEffects);
+  }
 }
 
 // Update touch sensitivity based on settings
@@ -264,8 +529,43 @@ function showScreen(screenId) {
   }
 }
 
+// ===== POWER-UP FUNCTIONS =====
+function createPowerUp(x, y) {
+  const types = ['life', 'extend', 'shrink', 'multiball', 'speed'];
+  const randomType = types[Math.floor(Math.random() * types.length)];
+  
+  // 20% chance to create a power-up
+  if (Math.random() < 0.2) {
+    powerUps.push(new PowerUp(randomType, x, y));
+  }
+}
+
+function createMultiBall() {
+  const currentBall = { x: x, y: y, dx: dx, dy: dy };
+  
+  // Create 2 additional balls
+  for (let i = 0; i < 2; i++) {
+    const angle = (Math.PI * 2 * i) / 3;
+    const speed = Math.sqrt(dx * dx + dy * dy);
+    const newDx = Math.cos(angle) * speed;
+    const newDy = Math.sin(angle) * speed;
+    
+    balls.push({
+      x: currentBall.x,
+      y: currentBall.y,
+      dx: newDx,
+      dy: newDy,
+      radius: ballRadius
+    });
+  }
+}
+
 // ===== GAME INITIALIZATION =====
 function initGame() {
+  // Initialize systems
+  particleSystem = new ParticleSystem();
+  particleSystem.setParticleLevel(gameSettings.particleEffects);
+  
   // Initialize audio on first game start
   initializeAudio();
   
@@ -302,9 +602,20 @@ function initGame() {
     }
   }
   
+  // Reset power-ups and balls
+  powerUps = [];
+  balls = [];
+  activePowerUps = [];
+  
   // Update UI
   document.getElementById("score").textContent = "Score: " + score;
   document.getElementById("lives").textContent = "Lives: " + lives;
+  
+  // Clear power-up display
+  document.querySelectorAll('.power-up-slot').forEach(slot => {
+    slot.textContent = '';
+    slot.classList.remove('active', 'timer');
+  });
   
   // Start game loop
   gameRunning = true;
@@ -395,6 +706,7 @@ document.getElementById('saveSettingsBtn').addEventListener('click', () => {
   gameSettings.ballSpeed = document.getElementById('ballSpeed').value;
   gameSettings.paddleSize = document.getElementById('paddleSize').value;
   gameSettings.touchSensitivity = document.getElementById('touchSensitivity').value;
+  gameSettings.particleEffects = document.getElementById('particleEffects').value;
   
   saveSettings();
   applySettings();
@@ -534,6 +846,16 @@ function collisionDetection() {
           score++;
           document.getElementById("score").textContent = "Score: " + score;
           
+          // Create particle explosion
+          if (particleSystem) {
+            const brickColors = ["#ff0040", "#00ccff", "#ffff00", "#ff00ff", "#00ffcc"];
+            const color = brickColors[(r + c) % brickColors.length];
+            particleSystem.createExplosion(b.x + brickWidth/2, b.y + brickHeight/2, color, 15);
+          }
+          
+          // Create power-up
+          createPowerUp(b.x + brickWidth/2, b.y + brickHeight/2);
+          
           // Check for win condition
           if (score === brickRowCount * brickColumnCount) {
             gameOver(true);
@@ -553,6 +875,31 @@ function drawBall() {
   ctx.fillStyle = "#ffff00"; // Yellow ball
   ctx.fill();
   ctx.closePath();
+  
+  // Create ball trail
+  if (particleSystem) {
+    particleSystem.createTrail(x, y, "#ffff00");
+  }
+}
+
+// Draw all balls
+function drawBalls() {
+  // Draw main ball
+  drawBall();
+  
+  // Draw additional balls
+  balls.forEach(ball => {
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffff00";
+    ctx.fill();
+    ctx.closePath();
+    
+    // Create trail for each ball
+    if (particleSystem) {
+      particleSystem.createTrail(ball.x, ball.y, "#ffff00");
+    }
+  });
 }
 
 // Draw the paddle
@@ -586,15 +933,65 @@ function drawBricks() {
   }
 }
 
+// Draw power-ups
+function drawPowerUps() {
+  powerUps.forEach(powerUp => {
+    powerUp.draw(ctx);
+  });
+}
+
+// Update power-ups
+function updatePowerUps() {
+  powerUps = powerUps.filter(powerUp => {
+    powerUp.update();
+    
+    // Check collision with main ball
+    if (powerUp.isColliding(x, y, ballRadius)) {
+      powerUp.activate();
+      return false; // Remove from array
+    }
+    
+    // Check collision with additional balls
+    balls.forEach(ball => {
+      if (powerUp.isColliding(ball.x, ball.y, ball.radius)) {
+        powerUp.activate();
+        return false;
+      }
+    });
+    
+    // Remove if fallen off screen
+    return powerUp.y < canvas.height + 50;
+  });
+}
+
+// Update all balls
+function updateBalls() {
+  // Update main ball
+  x += dx;
+  y += dy;
+  
+  // Update additional balls
+  balls.forEach(ball => {
+    ball.x += ball.dx;
+    ball.y += ball.dy;
+  });
+  
+  // Remove balls that fall off screen
+  balls = balls.filter(ball => ball.y < canvas.height + ballRadius);
+}
+
 // Main game loop - draw everything and update game state
 function draw() {
   if (!gameRunning || gameState !== 'playing') return;
   
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBricks();
-  drawBall();
+  drawBalls();
   drawPaddle();
+  drawPowerUps();
   collisionDetection();
+  updatePowerUps();
+  updateBalls();
 
   // Ball wall collision detection
   if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) dx = -dx;
@@ -603,6 +1000,11 @@ function draw() {
     // Ball hits bottom - check paddle collision
     if (x > paddleX && x < paddleX + paddleWidth) {
       dy = -dy; // Ball hits paddle
+      
+      // Create paddle hit particles
+      if (particleSystem) {
+        particleSystem.createExplosion(x, canvas.height - paddleHeight, "#00ccff", 8);
+      }
     } else {
       // Ball misses paddle - lose life
       lives--;
@@ -615,6 +1017,7 @@ function draw() {
         x = canvas.width / 2;
         y = canvas.height - 30;
         paddleX = (canvas.width - paddleWidth) / 2;
+        balls = []; // Remove additional balls
       }
     }
   }
@@ -623,9 +1026,13 @@ function draw() {
   if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 7;
   else if (leftPressed && paddleX > 0) paddleX -= 7;
 
+  // Update particle system
+  if (particleSystem) {
+    particleSystem.update();
+    particleSystem.draw();
+  }
+
   // Update ball position
-  x += dx;
-  y += dy;
   requestAnimationFrame(draw);
 }
 
@@ -700,7 +1107,12 @@ async function showLeaderboard() {
         return `<li>${medal} ${playerName} - ${entry.score}</li>`;
       })
       .join("");
-    document.getElementById("leaderboard").classList.remove("hidden");
+    
+    // Ensure leaderboard is visible
+    const leaderboardContainer = document.getElementById("leaderboard");
+    leaderboardContainer.classList.remove("hidden");
+    leaderboardContainer.style.display = "block";
+    
   } catch (error) {
     console.error('Error displaying leaderboard:', error);
   }
