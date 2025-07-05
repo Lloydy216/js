@@ -4,14 +4,7 @@
 /* Load retro font */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-/* Device detection */
-.is-mobile {
-  /* Mobile-specific styles */
-}
 
-.is-desktop {
-  /* Desktop-specific styles */
-}
 
 /* Responsive design for the game canvas and HUD */
 @media (max-width: 600px) {
@@ -303,6 +296,26 @@ body {
 }
 
 .game-screen.hidden {
+  display: none;
+}
+
+/* Audio status indicator */
+.audio-status {
+  margin-top: 15px;
+  padding: 10px;
+  background: rgba(0, 255, 204, 0.1);
+  border: 1px solid var(--arcade-text);
+  border-radius: 5px;
+}
+
+.audio-status p {
+  font-size: 8px;
+  color: var(--arcade-text);
+  margin: 0;
+  text-align: center;
+}
+
+.audio-status.hidden {
   display: none;
 }
 
