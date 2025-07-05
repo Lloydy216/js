@@ -8,28 +8,132 @@
     <!-- Link to external CSS for styling --> 
     <link rel="stylesheet" href="gamestyle.css">
     <!--Viewport settings for responsive design -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     
 </head>
 <body>
     <!-- Background music -->
     <audio id="bgMusic" src="boss.ogg" loop></audio>
-    <!-- Game title and controls -->
-    <h1>Project 2 - Breakout Game</h1>
-    <div class="controls">
-        <button id="muteBtn" aria-label="Toggle background music on or off">Mute Music</button>
-        <span id="score">Score: 0</span>
-        <span id="lives">Lives: 3</span>
+    
+    <!-- Start Screen -->
+    <div id="startScreen" class="game-screen">
+        <h1>🎮 BREAKOUT GAME 🎮</h1>
+        <div class="menu-container">
+            <h2>Controls</h2>
+            <div class="controls-info">
+                <div class="desktop-controls">
+                    <p>🖱️ Mouse: Move paddle</p>
+                    <p>⬅️ ➡️ Arrow Keys: Move paddle</p>
+                    <p>⏸️ P: Pause/Resume</p>
+                    <p>🎵 Mute button: Toggle music</p>
+                </div>
+                <div class="mobile-controls hidden">
+                    <p>👆 Touch & Drag: Move paddle</p>
+                    <p>⏸️ Pause button: Pause/Resume</p>
+                    <p>🎵 Mute button: Toggle music</p>
+                </div>
+            </div>
+            
+            <div class="menu-buttons">
+                <button id="startGameBtn" class="menu-btn">🚀 Start Game</button>
+                <button id="settingsBtn" class="menu-btn">⚙️ Settings</button>
+                <button id="leaderboardBtn" class="menu-btn">🏆 Leaderboard</button>
+            </div>
+        </div>
     </div>
-   <!-- Game canvas -->
-<canvas id="myCanvas" width="480" height="320" role="img" aria-label="Breakout game canvas"></canvas>
- 
-<div id="leaderboard" class="hidden">
-  <h2>🏆 Leaderboard</h2>
-  <ol id="leaderboardList"></ol>
-</div>
-<input type="text" id="playerName" placeholder="Enter name" maxlength="12">
-<button id="saveScoreBtn" aria-label="Save current game score to leaderboard">💾 Save Score</button>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="game-screen hidden">
+        <!-- Game title and controls -->
+        <h1>Project 2 - Breakout Game</h1>
+        <div class="controls">
+            <button id="muteBtn" aria-label="Toggle background music on or off">Mute Music</button>
+            <button id="pauseBtn" aria-label="Pause the game">⏸️ Pause</button>
+            <span id="score">Score: 0</span>
+            <span id="lives">Lives: 3</span>
+        </div>
+        <!-- Game canvas -->
+        <canvas id="myCanvas" width="480" height="320" role="img" aria-label="Breakout game canvas"></canvas>
+        
+        <!-- Mobile touch controls overlay -->
+        <div id="mobileControls" class="mobile-controls-overlay hidden">
+            <div class="touch-area">
+                <div class="touch-indicator">👆 Touch to move paddle</div>
+            </div>
+        </div>
+        
+        <div id="leaderboard" class="hidden">
+            <h2>🏆 Leaderboard</h2>
+            <ol id="leaderboardList"></ol>
+        </div>
+        <input type="text" id="playerName" placeholder="Enter name" maxlength="12">
+        <button id="saveScoreBtn" aria-label="Save current game score to leaderboard">💾 Save Score</button>
+    </div>
+
+    <!-- Pause Menu -->
+    <div id="pauseMenu" class="game-screen hidden">
+        <div class="menu-container">
+            <h2>⏸️ Game Paused</h2>
+            <div class="menu-buttons">
+                <button id="resumeBtn" class="menu-btn">▶️ Resume</button>
+                <button id="restartBtn" class="menu-btn">🔄 Restart</button>
+                <button id="mainMenuBtn" class="menu-btn">🏠 Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen" class="game-screen hidden">
+        <div class="menu-container">
+            <h2 id="gameOverTitle">🎯 Game Over!</h2>
+            <p id="finalScore">Final Score: 0</p>
+            <div class="menu-buttons">
+                <button id="playAgainBtn" class="menu-btn">🎮 Play Again</button>
+                <button id="saveScoreMenuBtn" class="menu-btn">💾 Save Score</button>
+                <button id="mainMenuFromGameOverBtn" class="menu-btn">🏠 Main Menu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Menu -->
+    <div id="settingsScreen" class="game-screen hidden">
+        <div class="menu-container">
+            <h2>⚙️ Settings</h2>
+            <div class="settings-option">
+                <label for="musicVolume">🎵 Music Volume:</label>
+                <input type="range" id="musicVolume" min="0" max="100" value="50">
+                <span id="volumeValue">50%</span>
+            </div>
+            <div class="settings-option">
+                <label for="ballSpeed">⚡ Ball Speed:</label>
+                <select id="ballSpeed">
+                    <option value="slow">Slow</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="fast">Fast</option>
+                </select>
+            </div>
+            <div class="settings-option">
+                <label for="paddleSize">🏓 Paddle Size:</label>
+                <select id="paddleSize">
+                    <option value="small">Small</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="large">Large</option>
+                </select>
+            </div>
+            <div class="settings-option">
+                <label for="touchSensitivity">👆 Touch Sensitivity:</label>
+                <select id="touchSensitivity">
+                    <option value="low">Low</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div class="menu-buttons">
+                <button id="saveSettingsBtn" class="menu-btn">💾 Save Settings</button>
+                <button id="backToMenuBtn" class="menu-btn">⬅️ Back to Menu</button>
+            </div>
+        </div>
+    </div>
 
    <!-- Supabase JavaScript library -->
    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
