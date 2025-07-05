@@ -4,19 +4,98 @@
 /* Load retro font */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+/* Device detection */
+.is-mobile {
+  /* Mobile-specific styles */
+}
+
+.is-desktop {
+  /* Desktop-specific styles */
+}
+
 /* Responsive design for the game canvas and HUD */
 @media (max-width: 600px) {
   canvas {
     width: 100%;
     height: auto;
+    max-width: 480px;
   }
- * { padding: 0; margin: 0; } canvas { background: #eee; display: block; margin: 0 auto; }
+  
   .hud {
     flex-direction: column;
     gap: 0.5rem;
   }
+  
+  /* Mobile-specific adjustments */
+  .controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .controls button {
+    padding: 12px 20px;
+    font-size: 11px;
+  }
+  
+  #score, #lives {
+    font-size: 12px;
+  }
+  
+  h1 {
+    font-size: 14px;
+  }
 }
 
+/* Mobile touch controls overlay */
+.mobile-controls-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+.mobile-controls-overlay.hidden {
+  display: none;
+}
+
+.touch-area {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 60px;
+  background: rgba(0, 255, 204, 0.1);
+  border: 2px dashed var(--arcade-border);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.touch-indicator {
+  font-size: 10px;
+  color: var(--arcade-text);
+  text-align: center;
+  opacity: 0.8;
+}
+
+/* Controls info sections */
+.controls-info {
+  margin-bottom: 20px;
+}
+
+.desktop-controls, .mobile-controls {
+  margin-bottom: 15px;
+}
+
+.desktop-controls.hidden, .mobile-controls.hidden {
+  display: none;
+}
 
 /* Color scheme */
 :root {
@@ -42,6 +121,161 @@ body {
   text-align: center;
   padding-top: 20px;
   user-select: none;
+  min-height: 100vh;
+  /* Prevent zoom on mobile */
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+/* Game Screen Management */
+.game-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--arcade-bg);
+  z-index: 1000;
+}
+
+.game-screen.hidden {
+  display: none;
+}
+
+/* Menu Container */
+.menu-container {
+  background: rgba(0, 0, 0, 0.8);
+  border: 3px solid var(--arcade-border);
+  border-radius: 10px;
+  padding: 30px;
+  max-width: 500px;
+  margin: 20px;
+  box-shadow: 0 0 20px var(--arcade-border);
+}
+
+.menu-container h2 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: var(--arcade-text);
+  text-shadow: var(--arcade-glow);
+}
+
+.menu-container p {
+  font-size: 10px;
+  margin: 8px 0;
+  color: #ffffff;
+}
+
+/* Menu Buttons */
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 25px;
+}
+
+.menu-btn {
+  background: transparent;
+  color: var(--arcade-text);
+  border: 2px solid var(--arcade-border);
+  padding: 15px 25px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  /* Mobile-friendly touch targets */
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+.menu-btn:hover {
+  background-color: var(--arcade-border);
+  color: #000;
+  transform: scale(1.05);
+  box-shadow: 0 0 15px var(--arcade-border);
+}
+
+.menu-btn:active {
+  transform: scale(0.95);
+}
+
+/* Settings Options */
+.settings-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 15px 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+}
+
+.settings-option label {
+  font-size: 10px;
+  color: var(--arcade-text);
+  margin-right: 10px;
+}
+
+.settings-option input[type="range"] {
+  width: 100px;
+  margin: 0 10px;
+  /* Mobile-friendly slider */
+  height: 20px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.settings-option input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: var(--arcade-border);
+  cursor: pointer;
+}
+
+.settings-option input[type="range"]::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: var(--arcade-border);
+  cursor: pointer;
+  border: none;
+}
+
+.settings-option select {
+  background: transparent;
+  color: var(--arcade-text);
+  border: 1px solid var(--arcade-border);
+  padding: 5px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  /* Mobile-friendly select */
+  min-height: 30px;
+}
+
+.settings-option select option {
+  background: #000;
+  color: var(--arcade-text);
+}
+
+#volumeValue {
+  font-size: 8px;
+  color: var(--arcade-text);
+  min-width: 30px;
 }
 
 /* Heading */
@@ -71,6 +305,8 @@ canvas {
   box-shadow: 0 0 15px var(--arcade-border);
   display: block;
   margin: 0 auto;
+  /* Mobile-friendly canvas */
+  touch-action: none;
 }
 
 /* Optional button styles (if you add restart buttons later) */
@@ -84,6 +320,9 @@ button {
   font-size: 10px;
   cursor: pointer;
   transition: 0.3s;
+  /* Mobile-friendly buttons */
+  min-height: 44px;
+  touch-action: manipulation;
 }
 
 button:hover {
@@ -112,4 +351,118 @@ button:hover {
   background: #222;
   border: 2px solid var(--arcade-border);
   color: var(--arcade-text);
+  /* Mobile-friendly input */
+  min-height: 44px;
+  font-size: 12px;
+}
+
+/* Game Over Screen Specific */
+#gameOverTitle {
+  font-size: 24px;
+  color: #ff0040;
+  text-shadow: 0 0 10px #ff0040;
+  margin-bottom: 15px;
+}
+
+#finalScore {
+  font-size: 14px;
+  color: var(--arcade-text);
+  margin: 15px 0;
+  text-shadow: var(--arcade-glow);
+}
+
+/* Controls styling for game screen */
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.controls button {
+  margin-top: 0;
+  padding: 8px 15px;
+  font-size: 9px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .menu-container {
+    padding: 20px;
+    margin: 10px;
+  }
+  
+  .menu-btn {
+    padding: 12px 20px;
+    font-size: 10px;
+  }
+  
+  .menu-container h2 {
+    font-size: 14px;
+  }
+  
+  .menu-container p {
+    font-size: 8px;
+  }
+  
+  /* Mobile-specific canvas positioning */
+  #gameScreen {
+    position: relative;
+  }
+  
+  canvas {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Hide desktop controls on mobile */
+  .desktop-controls {
+    display: none;
+  }
+  
+  .mobile-controls {
+    display: block;
+  }
+}
+
+/* Desktop-specific styles */
+@media (min-width: 601px) {
+  .mobile-controls {
+    display: none;
+  }
+  
+  .desktop-controls {
+    display: block;
+  }
+  
+  .mobile-controls-overlay {
+    display: none !important;
+  }
+}
+
+/* Landscape orientation adjustments for mobile */
+@media (max-width: 600px) and (orientation: landscape) {
+  .menu-container {
+    padding: 15px;
+    margin: 5px;
+  }
+  
+  .menu-btn {
+    padding: 8px 15px;
+    font-size: 8px;
+  }
+  
+  h1 {
+    font-size: 12px;
+  }
+  
+  .menu-container h2 {
+    font-size: 12px;
+  }
+  
+  .menu-container p {
+    font-size: 6px;
+  }
 }
