@@ -44,30 +44,54 @@
 
     <!-- Game Screen -->
     <div id="gameScreen" class="game-screen hidden">
-        <!-- Game title and controls -->
-        <h1>Project 2 - Breakout Game</h1>
-        <div class="controls">
-            <button id="muteBtn" aria-label="Toggle background music on or off">Mute Music</button>
-            <button id="pauseBtn" aria-label="Pause the game">⏸️ Pause</button>
-            <span id="score">Score: 0</span>
-            <span id="lives">Lives: 3</span>
-        </div>
-        <!-- Game canvas -->
-        <canvas id="myCanvas" width="480" height="320" role="img" aria-label="Breakout game canvas"></canvas>
-        
-        <!-- Mobile touch controls overlay -->
-        <div id="mobileControls" class="mobile-controls-overlay hidden">
-            <div class="touch-area">
-                <div class="touch-indicator">👆 Touch to move paddle</div>
+        <div class="game-container">
+            <!-- Game title and controls -->
+            <div class="game-header">
+                <h1>Project 2 - Breakout Game</h1>
+                <div class="controls">
+                    <button id="muteBtn" aria-label="Toggle background music on or off">Mute Music</button>
+                    <button id="pauseBtn" aria-label="Pause the game">⏸️ Pause</button>
+                    <span id="score">Score: 0</span>
+                    <span id="lives">Lives: 3</span>
+                </div>
+            </div>
+            
+            <!-- Power-up display -->
+            <div id="powerUpDisplay" class="power-up-display">
+                <div class="power-up-slot" id="powerUpSlot1"></div>
+                <div class="power-up-slot" id="powerUpSlot2"></div>
+                <div class="power-up-slot" id="powerUpSlot3"></div>
+            </div>
+            
+            <!-- Game area -->
+            <div class="game-area">
+                <!-- Game canvas -->
+                <canvas id="myCanvas" width="480" height="320" role="img" aria-label="Breakout game canvas"></canvas>
+                
+                <!-- Particle system overlay -->
+                <canvas id="particleCanvas" width="480" height="320" class="particle-overlay"></canvas>
+                
+                <!-- Mobile touch controls overlay -->
+                <div id="mobileControls" class="mobile-controls-overlay hidden">
+                    <div class="touch-area">
+                        <div class="touch-indicator">👆 Touch to move paddle</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Game info area -->
+            <div class="game-info">
+                <div id="leaderboard" class="leaderboard-container">
+                    <h2>🏆 Leaderboard</h2>
+                    <ol id="leaderboardList"></ol>
+                </div>
+                
+                <div class="score-input">
+                    <input type="text" id="playerName" placeholder="Enter name" maxlength="12">
+                    <button id="saveScoreBtn" aria-label="Save current game score to leaderboard">💾 Save Score</button>
+                </div>
             </div>
         </div>
-        
-        <div id="leaderboard" class="hidden">
-            <h2>🏆 Leaderboard</h2>
-            <ol id="leaderboardList"></ol>
-        </div>
-        <input type="text" id="playerName" placeholder="Enter name" maxlength="12">
-        <button id="saveScoreBtn" aria-label="Save current game score to leaderboard">💾 Save Score</button>
     </div>
 
     <!-- Pause Menu -->
@@ -123,6 +147,14 @@
             <div class="settings-option">
                 <label for="touchSensitivity">👆 Touch Sensitivity:</label>
                 <select id="touchSensitivity">
+                    <option value="low">Low</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div class="settings-option">
+                <label for="particleEffects">✨ Particle Effects:</label>
+                <select id="particleEffects">
                     <option value="low">Low</option>
                     <option value="normal" selected>Normal</option>
                     <option value="high">High</option>
