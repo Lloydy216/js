@@ -361,6 +361,7 @@ function setupTouchControls() {
 
 // ===== AUDIO HANDLING =====
 let audioInitialized = false;
+let audioLoaded = false;
 
 // Initialize audio after user interaction
 function initializeAudio() {
@@ -372,20 +373,73 @@ function initializeAudio() {
   bgMusic.volume = gameSettings.musicVolume / 100;
   bgMusic.loop = true;
   
-  // Try to play audio
-  const playPromise = bgMusic.play();
+  // Add event listeners for audio loading
+  bgMusic.addEventListener('canplaythrough', () => {
+    console.log('Audio file loaded successfully');
+    audioLoaded = true;
+  });
   
-  if (playPromise !== undefined) {
-    playPromise
-      .then(() => {
-        console.log('Audio started successfully');
-        audioInitialized = true;
-        updateMuteButton();
-      })
-      .catch(error => {
-        console.log('Audio autoplay blocked:', error);
-        // Audio will be enabled on first user interaction
-      });
+  bgMusic.addEventListener('error', (e) => {
+    console.error('Audio loading error:', e);
+    alert('Failed to load audio file. Please check if boss.ogg exists in the same folder.');
+  });
+  
+  // Try to load the audio file
+  bgMusic.load();
+  
+  // Try to play audio after a short delay to ensure it's loaded
+  setTimeout(() => {
+    if (audioLoaded) {
+      const playPromise = bgMusic.play();
+      
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log('Audio started successfully');
+            audioInitialized = true;
+            updateMuteButton();
+          })
+          .catch(error => {
+            console.log('Audio autoplay blocked:', error);
+            // Show a message to the user
+            console.log('Audio will be enabled on first user interaction');
+          });
+      }
+    } else {
+      console.log('Audio not loaded yet, will try on next interaction');
+    }
+  }, 100);
+}
+
+// Force play audio (called on user interaction)
+function forcePlayAudio() {
+  if (audioInitialized) return;
+  
+  const bgMusic = document.getElementById("bgMusic");
+  
+  if (bgMusic.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+    const playPromise = bgMusic.play();
+    
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log('Audio started successfully on user interaction');
+          audioInitialized = true;
+          updateMuteButton();
+          // Hide the audio status indicator
+          const audioStatus = document.getElementById('audioStatus');
+          if (audioStatus) {
+            audioStatus.classList.add('hidden');
+          }
+        })
+        .catch(error => {
+          console.error('Failed to play audio even after user interaction:', error);
+        });
+    }
+  } else {
+    console.log('Audio not ready yet, trying to load...');
+    bgMusic.load();
+    setTimeout(forcePlayAudio, 100);
   }
 }
 
@@ -560,7 +614,7 @@ function createMultiBall() {
   }
 }
 
-// ===== GAME INITIALIZATION =====
+// ======= Update initGame to load current level =======
 function initGame() {
   // Initialize systems
   particleSystem = new ParticleSystem();
@@ -610,8 +664,7 @@ function initGame() {
   // Update UI
   document.getElementById("score").textContent = "Score: " + score;
   document.getElementById("lives").textContent = "Lives: " + lives;
-  
-  // Clear power-up display
+  // Remove level UI update
   document.querySelectorAll('.power-up-slot').forEach(slot => {
     slot.textContent = '';
     slot.classList.remove('active', 'timer');
@@ -660,18 +713,18 @@ function gameOver(isWin = false) {
 
 // Start screen buttons
 document.getElementById('startGameBtn').addEventListener('click', () => {
-  initializeAudio(); // Initialize audio on first click
+  forcePlayAudio(); // Use forcePlayAudio instead
   showScreen('gameScreen');
   initGame();
 });
 
 document.getElementById('settingsBtn').addEventListener('click', () => {
-  initializeAudio(); // Initialize audio on first click
+  forcePlayAudio(); // Use forcePlayAudio instead
   showScreen('settingsScreen');
 });
 
 document.getElementById('leaderboardBtn').addEventListener('click', async () => {
-  initializeAudio(); // Initialize audio on first click
+  forcePlayAudio(); // Use forcePlayAudio instead
   showScreen('gameScreen');
   await showLeaderboard();
 });
@@ -700,6 +753,7 @@ document.getElementById('mainMenuFromGameOverBtn').addEventListener('click', () 
 });
 
 // Settings screen buttons
+document.getElementById('clearLeaderboardBtn').addEventListener('click', clearLeaderboard);
 document.getElementById('saveSettingsBtn').addEventListener('click', () => {
   // Update settings from form
   gameSettings.musicVolume = parseInt(document.getElementById('musicVolume').value);
@@ -738,7 +792,7 @@ const muteBtn = document.getElementById("muteBtn");
 
 // Toggle music mute/unmute functionality
 muteBtn.addEventListener("click", () => {
-  initializeAudio(); // Initialize audio on first click
+  forcePlayAudio(); // Use forcePlayAudio instead
   
   if (bgMusic.paused) {
     bgMusic.play().then(() => {
@@ -781,18 +835,21 @@ const brickPadding = 8;
 const brickOffsetTop = 30;
 const brickOffsetLeft = 30;
 
+// Initialize brick array
+let bricks = [];
+for (let c = 0; c < brickColumnCount; c++) {
+  bricks[c] = [];
+  for (let r = 0; r < brickRowCount; r++) {
+    bricks[c][r] = { x: 0, y: 0, status: 1 };
+  }
+}
+
 // Game state
 let score = 0;
 let lives = 3;
 
 // Initialize brick array
-const bricks = [];
-for (let c = 0; c < brickColumnCount; c++) {
-  bricks[c] = [];
-  for (let r = 0; r < brickRowCount; r++) {
-    bricks[c][r] = { x: 0, y: 0, status: 1 }; // status: 1 = visible, 0 = destroyed
-  }
-}
+
 
 // ===== EVENT LISTENERS =====
 // Pause game with 'P' key
@@ -836,10 +893,12 @@ function mouseMoveHandler(e) {
 // ===== GAME LOGIC =====
 // Check for ball collision with bricks
 function collisionDetection() {
+  let bricksLeft = 0;
   for (let c = 0; c < brickColumnCount; c++) {
     for (let r = 0; r < brickRowCount; r++) {
       const b = bricks[c][r];
       if (b.status === 1) {
+        bricksLeft++;
         if (x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
           dy = -dy; // Reverse ball direction
           b.status = 0; // Destroy brick
@@ -855,15 +914,16 @@ function collisionDetection() {
           
           // Create power-up
           createPowerUp(b.x + brickWidth/2, b.y + brickHeight/2);
-          
-          // Check for win condition
-          if (score === brickRowCount * brickColumnCount) {
-            gameOver(true);
-            return;
-          }
         }
       }
     }
+  }
+  // If no bricks left, go to next level or win
+  if (bricksLeft === 0) {
+    setTimeout(() => {
+      alert('YOU WIN, CONGRATS!');
+      document.location.reload();
+    }, 500);
   }
 }
 
@@ -1134,6 +1194,50 @@ saveScoreBtn.addEventListener("click", async () => {
   saveScoreBtn.textContent = "✅ Score Saved!";
 });
 
+// Clear leaderboard function
+async function clearLeaderboard() {
+  if (!confirm('Are you sure you want to clear all scores from the leaderboard? This action cannot be undone.')) {
+    return;
+  }
+  
+  try {
+    // First, let's see what's in the leaderboard
+    const { data: currentScores, error: fetchError } = await window.supabaseClient
+      .from('leaderboard')
+      .select('*');
+    
+    if (fetchError) {
+      console.error('Error fetching current scores:', fetchError);
+      alert('Failed to fetch current scores. Please try again.');
+      return;
+    }
+    
+    console.log('Current scores:', currentScores);
+    
+    // Delete all records
+    const { error } = await window.supabaseClient
+      .from('leaderboard')
+      .delete()
+      .neq('id', 0); // Delete all records
+    
+    if (error) {
+      console.error('Error clearing leaderboard:', error);
+      alert('Failed to clear leaderboard. Please try again.');
+      return;
+    }
+    
+    console.log('Leaderboard cleared successfully');
+    alert('Leaderboard cleared successfully!');
+    
+    // Refresh the leaderboard display
+    await showLeaderboard();
+    
+  } catch (error) {
+    console.error('Error clearing leaderboard:', error);
+    alert('Failed to clear leaderboard. Please try again.');
+  }
+}
+
 // ===== INITIALIZATION =====
 // Load settings and show start screen when page loads
 document.addEventListener('DOMContentLoaded', () => {
@@ -1143,7 +1247,7 @@ document.addEventListener('DOMContentLoaded', () => {
   showScreen('startScreen');
   
   // Initialize audio on any user interaction
-  document.addEventListener('click', initializeAudio, { once: true });
-  document.addEventListener('touchstart', initializeAudio, { once: true });
-  document.addEventListener('keydown', initializeAudio, { once: true });
+  document.addEventListener('click', forcePlayAudio, { once: true });
+  document.addEventListener('touchstart', forcePlayAudio, { once: true });
+  document.addEventListener('keydown', forcePlayAudio, { once: true });
 });
